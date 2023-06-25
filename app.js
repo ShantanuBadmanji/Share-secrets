@@ -5,7 +5,8 @@ const express = require('express');
 const ejs = require('ejs');
 const exp = require('constants');
 const mongoose = require('mongoose');
-const md5 = require('md5');
+const bcrypt = require('bcrypt');
+const saltCount = 10;
 
 mongoose
     .connect("mongodb://127.0.0.1:27017/userDB")
@@ -46,32 +47,37 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
     // console.log(req.body)
-    new User({
-        email: req.body.username,
-        password: md5(req.body.password)
-    })
-        .save()
-        .then(() => res.redirect('login'))
+    bcrypt
+        .hash(req.body.password, saltCount)
+        .then((hash) => {
+            new User({
+                email: req.body.username,
+                password: hash
+            })
+                .save()
+                .then(() => res.redirect('login'))
+                .catch(err => res.send(err.message));
+        })
         .catch(err => res.send(err.message));
 })
 
 app.post('/login', (req, res) => {
-    // console.log(req.body)
-    User
-        .findOne({ email: req.body.username })
-        .then((doc) => {
-            // console.log(doc)
-            if (doc &&doc.password === md5(req.body.password)) {
-                res.render('secrets');
-            }
-            else if (doc) {
-                res.send('wrong password.')
-            }
-            else {
+    // console.log(req.body);
+    (async () => {
+        try {
+            const doc = await User.findOne({ email: req.body.username });
+            if (!doc)
                 res.send('Invalid username.')
+            else {
+                if (await bcrypt.compare(req.body.password, doc.password))
+                    res.render('secrets');
+                else
+                    res.send('wrong password.');
             }
-        })
-        .catch(err => res.send(err.message));
+        } catch (err) {
+            res.send(err.message);
+        }
+    })();
 })
 
 

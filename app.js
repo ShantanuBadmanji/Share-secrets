@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -29,21 +30,57 @@ mongoose
     .catch(err => console.log(err.message))
 
 const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true
-    },
-    password: String
+    username: String,
+    password: String,
+    googleId: String
 });
 
 userSchema.plugin(passportLocalMongoose);
 
 const User = new mongoose.model('User', userSchema);
 
-passport.use(User.createStrategy());
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+passport.serializeUser(function (user, cb) {
+    process.nextTick(function () {
+        return cb(null, {
+            id: user.id,
+            username: user.username,
+            picture: user.picture
+        });
+    });
+});
 
+passport.deserializeUser(function (user, cb) {
+    process.nextTick(function () {
+        return cb(null, user);
+    });
+});
+
+// local strategy
+passport.use(User.createStrategy());
+
+// google strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/secrets"
+},
+    function (accessToken, refreshToken, profile, cb) {
+        console.log('google: ', profile.displayName);
+        User
+            .findOne({ googleId: profile.id })
+            .then(user => {
+                if (!user) {
+                    user = new User({
+                        // username: profile.displayName,
+                        googleId: profile.id
+                    });
+                    user.save();
+                }
+                return cb(null, user);
+            })
+            .catch(err => cb(err, null))
+    }
+));
 
 
 app.get('/', (req, res) => {
@@ -56,8 +93,9 @@ app.get('/register', (req, res) => {
     res.render('register');
 })
 app.get('/secrets', (req, res) => {
+    console.log(req.user)
     if (!req.isAuthenticated()) {
-        res.redirect("/login");
+        return res.redirect("/login");
     }
     res.render('secrets');
 })
@@ -74,7 +112,16 @@ app.get('/logout', (req, res) => {
     });
     res.redirect('/');
 })
-
+app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile'] })
+);
+app.get('/auth/google/secrets',
+    passport.authenticate('google', { failureRedirect: '/login' }),
+    function (req, res) {
+        // Successful authentication, redirect home.
+        res.redirect('/secrets');
+    }
+);
 
 
 
@@ -86,8 +133,8 @@ app.post('/register', (req, res) => {
                 if (err) {
                     return res.send(err.message);
                 }
+                res.redirect('/secrets');
             })
-            res.redirect('/secrets');
         })
         .catch((err) => res.send(`registration error: ${err.message}`))
 })

@@ -25,8 +25,15 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+
+const username = encodeURIComponent(process.env.MY_USERNAME);
+const password = encodeURIComponent(process.env.MY_PASSWORD);
+const cluster = process.env.MY_CLUSTER;
+const database = process.env.MY_DATABASE;
+const url = `mongodb+srv://${username}:${password}@${cluster}/${database}`;
 mongoose
-    .connect('mongodb://127.0.0.1:27017/userDB', { useNewUrlParser: true })
+    // .connect(`mongodb://127.0.0.1:27017/${database}`, { useNewUrlParser: true })
+    .connect(url, { useNewUrlParser: true })
     .then(() => console.log(`db connected.`))
     .catch(err => console.log(err.message))
 
@@ -125,7 +132,7 @@ app.get('/login', (req, res) => {
     res.render('login');
 })
 app.get('/register', (req, res) => {
-    res.render('register',{err:null});
+    res.render('register', { err: null });
 })
 app.get('/secrets', (req, res) => {
     // console.log(req.user)
@@ -187,7 +194,7 @@ app.post('/register', (req, res) => {
                 res.redirect('/secrets');
             })
         })
-        .catch(err => res.render('register',{err: err.message}))
+        .catch(err => res.render('register', { err: err.message }))
 })
 app.post('/login', passport.authenticate(
     'local',
@@ -201,9 +208,11 @@ app.post("/submit", (req, res) => {
             secret: revSecret,
             authorId: req.user.id
         }).save()
+            .then(() => res.redirect('/secrets'))
             .catch((err) => res.send(`Submit error: ${err.message}`));
+    } else {
+        res.redirect('/secrets');
     }
-    res.redirect('/secrets');
 })
 
 const port = 3000

@@ -125,7 +125,7 @@ app.get('/login', (req, res) => {
     res.render('login');
 })
 app.get('/register', (req, res) => {
-    res.render('register');
+    res.render('register',{err:null});
 })
 app.get('/secrets', (req, res) => {
     // console.log(req.user)
@@ -187,7 +187,7 @@ app.post('/register', (req, res) => {
                 res.redirect('/secrets');
             })
         })
-        .catch((err) => res.send(`registration error: ${err.message}`))
+        .catch(err => res.render('register',{err: err.message}))
 })
 app.post('/login', passport.authenticate(
     'local',

@@ -19,7 +19,7 @@
                 <input type="password" class="form-control" name="password">
               </div>
               <button type="submit" class="btn btn-dark">Login</button>
-              <a class="btn btn-dark" href="/register" role="button">Sign Up</a>
+              <p><strong>Don't have an account? <a class="" href="/register" role="button">Sign Up</a></strong></p>
             </form>
 
           </div>
@@ -43,6 +43,12 @@
       </div>
 
     </div>
+
+    <% if (err) { %>
+      <div class="alert alert-warning" role="alert">
+        <%= err %>
+      </div>
+      <% } %>
   </div>
 
   <%- include('partials/footer') %>

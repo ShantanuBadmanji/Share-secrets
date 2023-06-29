@@ -129,7 +129,8 @@ app.get('/', (req, res) => {
     res.render('home');
 })
 app.get('/login', (req, res) => {
-    res.render('login');
+    // console.log('login: ',req.session.messag);
+    res.render('login', { err: null });
 })
 app.get('/register', (req, res) => {
     res.render('register', { err: null });
@@ -196,10 +197,22 @@ app.post('/register', (req, res) => {
         })
         .catch(err => res.render('register', { err: err.message }))
 })
-app.post('/login', passport.authenticate(
-    'local',
-    { successRedirect: '/secrets', failureRedirect: '/login' })
-);
+app.post('/login', (req, res,next) => {
+    passport.authenticate('local', function (err, user, info, status) {
+        if (err) {
+            console.log(err);
+        } else if (!user) {
+            return res.render('login', { err: info.message });
+        }
+        req.login(user, (err) => {
+            if (err) {
+                return res.send(err.message);
+            }
+            res.redirect('/secrets');
+        });
+    })(req, res,next);
+})
+
 app.post("/submit", (req, res) => {
     // console.log(req.user);
     const revSecret = req.body.secret;

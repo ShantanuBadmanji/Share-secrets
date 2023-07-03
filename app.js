@@ -10,6 +10,7 @@ const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const _ = require('lodash');
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -26,14 +27,14 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 
-const username = encodeURIComponent(process.env.MY_USERNAME);
-const password = encodeURIComponent(process.env.MY_PASSWORD);
+const myUsername = encodeURIComponent(process.env.MY_USERNAME);
+const myPassword = encodeURIComponent(process.env.MY_PASSWORD);
 const cluster = process.env.MY_CLUSTER;
 const database = process.env.MY_DATABASE;
-const url = `mongodb+srv://${username}:${password}@${cluster}/${database}`;
+const url = `mongodb+srv://${myUsername}:${myPassword}@${cluster}/${database}`;
 mongoose
-    // .connect(`mongodb://127.0.0.1:27017/${database}`, { useNewUrlParser: true })
-    .connect(url, { useNewUrlParser: true })
+    .connect(`mongodb://127.0.0.1:27017/${database}`, { useNewUrlParser: true })
+    // .connect(url, { useNewUrlParser: true })
     .then(() => console.log(`db connected.`))
     .catch(err => console.log(err.message))
 
@@ -41,12 +42,49 @@ const userSchema = new mongoose.Schema({
     username: String,
     password: String,
     googleId: String,
-    secrets: String
+    facebookId: String,
+    secrets: String,
+    communities: [String]
 });
 
 userSchema.plugin(passportLocalMongoose);
 
 const User = new mongoose.model('User', userSchema);
+
+
+
+//  CREATE ADMIN
+const adminSchema = new mongoose.Schema({
+    username: String,
+    password: String,
+    communities: [{
+        name: String,
+        code: String
+    }]
+});
+
+userSchema.plugin(passportLocalMongoose);
+
+const Admin = new mongoose.model('Admin', adminSchema);
+
+Admin.findOne({ username: myUsername, password: myPassword })
+    .then(user => {
+        if (!user) {
+            new Admin({
+                username: myUsername,
+                password: myPassword,
+                communities: [{
+                    name: "global",
+                    code: ""
+                }, {
+                    name: "developers",
+                    code: "webuildthings"
+                }]
+            }).save();
+        }
+    }
+    )
+
 
 passport.serializeUser(function (user, cb) {
     process.nextTick(function () {
@@ -74,14 +112,15 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:3000/auth/google/secrets"
 },
     function (accessToken, refreshToken, profile, cb) {
-        console.log('google: ', profile.displayName);
+        console.log('google:\n', profile);
         User
-            .findOne({ googleId: profile.id })
+            .findOne({ googleId: profile._json.sub })
             .then(user => {
                 if (!user) {
                     user = new User({
-                        // username: profile.displayName,
-                        googleId: profile.id
+                        username: profile._json.name,
+                        googleId: profile._json.sub,
+                        communities: ["global"]
                     });
                     user.save();
                 }
@@ -98,14 +137,15 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/secrets"
 },
     function (accessToken, refreshToken, profile, cb) {
-        console.log('facebook: ', profile.displayName);
+        console.log('facebook: ', profile);
         User
             .findOne({ facebookId: profile.id })
             .then(user => {
                 if (!user) {
                     user = new User({
                         // username: profile.displayName,
-                        facebookId: profile.id
+                        facebookId: profile.id,
+                        communities: ["global"]
                     });
                     user.save();
                 }
@@ -121,13 +161,75 @@ const secretSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    authorId: String
+    authorId: String,
+    community: String
 });
 const Secret = new mongoose.model('Secret', secretSchema);
 
 app.get('/', (req, res) => {
     res.render('home');
 })
+app.get('/secrets',(req, res) => {
+    res.redirect('community/global');
+
+});
+app.get('/community/:communityName', async (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.redirect("/login");
+    }
+
+    const secrets =
+        await Secret
+            .find({ community: _.lowerCase(req.params.communityName) }, { _id: 0, secret: 1 })
+            .exec();
+
+    const user = await User.findById({ _id: req.user.id }).exec();
+
+    res.render('community', {
+        communitySecrets: secrets,
+        communityName: req.params.communityName,
+        userCommunities: user.communities
+    });
+})
+
+
+app.get('/submit', (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.redirect("/login");
+    }
+    res.render('submit');
+});
+app.get('/:communityName/submit', (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.redirect("/login");
+    }
+    res.render('submit', {
+        communityName: req.params.communityName
+    });
+});
+app.get('/join-community', (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.redirect("/login");
+    }
+    Admin.findOne({ username: myUsername, password: myPassword })
+        .then(admin => {
+            res.render('join-community', { communities: admin.communities, createError: null, joinError: null });
+        })
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/login', (req, res) => {
     // console.log('login: ',req.session.messag);
     res.render('login', { err: null });
@@ -135,22 +237,6 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
     res.render('register', { err: null });
 })
-app.get('/secrets', (req, res) => {
-    // console.log(req.user)
-    if (!req.isAuthenticated()) {
-        return res.redirect("/login");
-    }
-    Secret.find({}, { _id: 0, secret: 1 })
-        .then(secrets => {
-            res.render('secrets', { allSecrets: secrets });
-        })
-})
-app.get('/submit', (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.redirect("/login");
-    }
-    res.render('submit');
-});
 app.get('/logout', (req, res) => {
     req.logout(err => {
         if (err)
@@ -160,8 +246,10 @@ app.get('/logout', (req, res) => {
 });
 
 
+
+
 app.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile'] })
+    passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 app.get('/auth/google/secrets',
     passport.authenticate('google', { failureRedirect: '/login' }),
@@ -186,7 +274,7 @@ app.get('/auth/facebook/secrets',
 
 app.post('/register', (req, res) => {
     User.register(
-        new User({ username: req.body.username }), req.body.password)
+        new User({ username: req.body.username, communities: ['global'] }), req.body.password)
         .then(user => {
             req.login(user, (err) => {
                 if (err) {
@@ -197,7 +285,7 @@ app.post('/register', (req, res) => {
         })
         .catch(err => res.render('register', { err: err.message }))
 })
-app.post('/login', (req, res,next) => {
+app.post('/login', (req, res, next) => {
     passport.authenticate('local', function (err, user, info, status) {
         if (err) {
             console.log(err);
@@ -210,24 +298,71 @@ app.post('/login', (req, res,next) => {
             }
             res.redirect('/secrets');
         });
-    })(req, res,next);
+    })(req, res, next);
 })
 
-app.post("/submit", (req, res) => {
-    // console.log(req.user);
+
+
+// -----------------------------------------------------------------------------
+app.post("/:communityName/submit", (req, res) => {
+    console.log(req.body.secret);
     const revSecret = req.body.secret;
+    const communityName = _.lowerCase(req.params.communityName);
     if (revSecret) {
         new Secret({
             secret: revSecret,
-            authorId: req.user.id
+            authorId: req.user.id,
+            community: communityName
         }).save()
-            .then(() => res.redirect('/secrets'))
+            .then(() => res.redirect(`/community/${communityName}`))
             .catch((err) => res.send(`Submit error: ${err.message}`));
     } else {
-        res.redirect('/secrets');
+        res.redirect(`/community/${communityName}`);
+    }
+})
+app.post("/join-community", async (req, res) => {
+    console.log(req.body);
+    const communityName = _.lowerCase(req.body.communityName);
+    const communityCode = req.body.communityCode;
+
+    const admin = await Admin.findOne({}).exec();
+    if (admin.communities.some(x => x.name === communityName && (x.code === '' || x.code === communityCode))) {
+        const user = await User.findById({ _id: req.user.id }).exec();
+        if (!user.communities.includes(communityName)) {
+            user.communities.push(communityName);
+            user.save();
+        }
+        return res.redirect(`/community/${communityName}`);
+    }
+    else {
+        return res.render("join-community", { communities: admin.communities, joinError: 'community-name or code is invalid', createError: null });
+    }
+    // User.UpdateOne({ username: myUsername, password: myPassword },{$push: communityName} ).exec();
+})
+app.post("/create-community", async (req, res) => {
+    console.log(req.body);
+    const communityName = _.lowerCase(req.body.communityName);
+    const communityCode = req.body.communityCode;
+
+    const admin = await Admin.findOne({}).exec();
+    if (admin.communities.some(x => x.name === communityName)) {
+        return res.render("join-community", { communities: admin.communities, joinError: null, createError: `${communityName} community already exists. Try joining the community.` });
+    }
+    else {
+        admin.communities.push({
+            name: communityName,
+            code: communityCode
+        });
+        admin.save();
+
+        const user = await User.findById({ _id: req.user.id }).exec();
+        user.communities.push(communityName);
+        user.save();
+        return res.redirect(`/community/${communityName}`);
     }
 })
 
-const port = 3000
+
+const port = process.env.PORT || 3000;
 app.listen(3000,
     () => console.log(`Server listening on port ${port}.`));

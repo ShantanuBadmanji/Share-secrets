@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+  <%- include('navbar') %>
+
+    <div class="container text-center">
+      <h1 class="display-3">Welcome to <%= communityName %> Community</h1>
+
+      <p class="secret-text">I prefer Bootstrap over Vanilla CSS. Saves time!!!
+      </p>
+      <p class="secret-text">Jack Bauer is my hero.</p>
+      <% communitySecrets.forEach(aSecret=> { %>
+        <p class="secret-text">
+          <%= aSecret.secret %>
+        </p>
+        <% }) %>
+
+          <hr>
+    </div>
+
+    <%- include('partials/footer') %>

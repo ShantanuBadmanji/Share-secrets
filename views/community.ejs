@@ -2,18 +2,17 @@
   <%- include('partials/navbar') %>
 
     <div class="container text-center">
-      <h1 class="display-3">Welcome to <%= communityName %> Community</h1>
+      <h1 class="display-3 text-capitalize">Welcome to <%= communityName %> Community</h1>
+      <% if (communitySecrets.length ===0) { %>
+        <p class="secret-text">Be the first person to share your secrets</p>
+        <% } %>
+          <% communitySecrets.forEach(aSecret=> { %>
+            <p class="secret-text">
+              <%= aSecret.secret %>
+            </p>
+            <% }) %>
 
-      <p class="secret-text">I prefer Bootstrap over Vanilla CSS. Saves time!!!
-      </p>
-      <p class="secret-text">Jack Bauer is my hero.</p>
-      <% communitySecrets.forEach(aSecret=> { %>
-        <p class="secret-text">
-          <%= aSecret.secret %>
-        </p>
-        <% }) %>
-
-          <hr>
+              <hr>
     </div>
 
     <%- include('partials/footer') %>

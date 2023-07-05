@@ -1,6 +1,5 @@
 <%- include('partials/header') %>
-
-  <div class="container mt-5">
+  <div class="container purple mt-5 rounded">
     <h1>Login</h1>
 
     <div class="row">
@@ -18,7 +17,7 @@
                 <label for="password">Password</label>
                 <input type="password" class="form-control" name="password">
               </div>
-              <button type="submit" class="btn btn-dark">Login</button>
+              <button type="submit" class="btn btn-pink">Login</button>
               <p><strong>Don't have an account? <a class="" href="/register" role="button">Sign Up</a></strong></p>
             </form>
 
@@ -45,8 +44,8 @@
     </div>
 
     <% if (err) { %>
-      <div class="alert alert-warning" role="alert">
-        <%= err %>
+      <div class="pb-2">
+        <p class="alert alert-warning"  role= "alert"><%= err %></p>
       </div>
       <% } %>
   </div>

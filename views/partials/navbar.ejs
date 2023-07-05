@@ -1,7 +1,7 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+<nav class="navbar navbar-expand-lg bg-body-tertiary navbar-dark">
     <div class="container">
         <a class="btn navbar-brand" href="/"><i class="fas fa-key fa-2x"></i> SHARE SECRETS</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        <button class="navbar-toggler " type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -18,28 +18,29 @@
                     </a>
                 </li>
                 <li class="nav-item" id="about">
-                <div class="dropdown">
-                    <a class="btn   dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        My Communities
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton2">
-                        <% userCommunities.forEach(community=> { %>
-                            <li><a class="dropdown-item " href="/community/<%-community%>">
-                                    <%=community%>
-                                </a>
-                            </li>
-                            <% }); %>
-                    </ul>
-                </div>
+                    <div class="dropdown dropdown-menu-dark">
+                        <a class="btn   dropdown-toggle" type="button" id="dropdownMenuButton2"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            My Communities
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" style="background-color: #150050;"
+                            aria-labelledby="dropdownMenuButton2">
+                            <% userCommunities.forEach(community=> { %>
+                                <li><a class="dropdown-item " href="/community/<%-community%>">
+                                        <%=community%>
+                                    </a>
+                                </li>
+                                <% }); %>
+                        </ul>
+                    </div>
                 </li>
                 <div>
                     <li class="nav-item" id="about">
                         <a class="nav-link btn" href="/join-community">New Communities</a>
-                    </div>
-                    </li>
-                    <li class="nav-item" id="contact">
-                    <a class="btn btn-light" href="/logout" role="button">Log Out</a>
+                </div>
+                </li>
+                <li class="nav-item" id="contact">
+                    <a class="btn btn-danger" href="/logout" role="button">Log Out</a>
                 </li>
 
 

@@ -1,0 +1,52 @@
+<%- include('partials/header') %>
+  <div class="container purple mt-5 rounded">
+    <h1>Register</h1>
+
+    <div class="row ">
+      <div class="col-sm-8">
+        <div class="card">
+          <div class="card-body">
+
+            <!-- Makes POST request to /register route -->
+            <form action="/register" method="POST">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" name="username">
+              </div>
+              <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" name="password">
+              </div>
+              <button type="submit" class="btn btn-pink">Register</button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4 d-flex flex-column justify-content-start">
+        <div class="card my-2">
+          <a class="btn btn-block btn-google" href="/auth/google" role="button">
+            <i class="fab fa-google"></i>
+            Sign Up with Google
+          </a>
+        </div>
+
+        <div class="card social-block my-2">
+          <a class="btn btn-block btn-facebook" href="/auth/facebook" role="button">
+            <i class="fab fa-facebook"></i>
+            Sign Up with facbook
+          </a>
+        </div>
+      </div>
+    </div>
+    <% if (err) { %>
+      <div class="pb-2" >
+        <p class="alert alert-warning" role="alert"><%= err %><br><a class="" href="/login" role="button"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+              height="16" fill="currentColor" class="bi bi-caret-left-fill" viewBox="0 0 16 16">
+              <path
+                d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z" />
+            </svg> Return to login</a></p>
+      </div>
+    <% } %>
+
+        <%- include('partials/header') %>

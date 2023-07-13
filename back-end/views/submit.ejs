@@ -1,0 +1,16 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar2') %>
+  <div class="container jumbotron centered mt-5">
+      
+      <p class="secret-text">Don't keep your secrets, share them anonymously!</p>
+
+      <form action="/<%-communityName %>/submit" method="POST">
+        <div class="form-group">
+          <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="secret"  placeholder="What's your secret?"></textarea>
+        </div>
+          <button type="submit" class="btn btn-primary">Share</button>
+      </form>
+
+
+    </div>
+  <%- include('partials/footer') %>

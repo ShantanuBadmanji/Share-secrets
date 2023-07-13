@@ -1,0 +1,83 @@
+
+
+body,
+.auth-btn {
+  background-color: #000000;
+}
+.btn-pink{
+  background-color: #FB2576;
+  color: #ffff;
+  border-color: #FB2576;
+}
+
+.centered {
+  text-align: center;
+  align-items: center;
+}
+
+.secret-text {
+  text-align: center;
+  font-size: 2rem;
+  color: #fff;
+  background-color: #3F0071;
+  border-radius: 20px;
+}
+
+.container-fluid {
+  padding-top: 70px;
+  padding-bottom: 70px;
+}
+
+.purple,
+.card,
+.jumbotron {
+  background-color: #150050;
+}
+
+.navbar {
+  background-color: #150050;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  border: 0;
+  border-radius: 0;
+  margin-bottom: 0;
+  font-size: 12px;
+  /* letter-spacing: 2px; */
+}
+
+.navbar-nav li a:hover {
+  color: #FB2576 !important;
+}
+
+.navbar-nav li a {
+  color: #ffff !important;
+}
+
+.navbar-brand,
+h1 {
+  color: #FB2576 !important;
+}
+
+.footer-padding {
+  padding-bottom: 60px;
+}
+
+.footer {
+  position: absolute;
+  text-align: center;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #FB2576;
+}
+
+label,
+p {
+  color: #fff;
+
+}
+
+.footer {
+  margin-top: 25px;
+  font-size: 12px;
+}
